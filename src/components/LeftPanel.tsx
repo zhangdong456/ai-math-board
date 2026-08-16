@@ -1,8 +1,9 @@
-// 左侧 AI 操作区：文字生成、学科选择、图片上传、默认模板列表、模型配置入口
+// 左侧 AI 操作区：文字生成、学科选择、图片上传、模板列表（内置 + 我的收藏）、模型配置入口
 import React, { useRef, useState } from 'react';
 import { useUi } from '../store/uiStore';
 import { useBoard } from '../store/boardStore';
 import { useModelConfig, getActiveConfig, isConfigured } from '../store/modelConfigStore';
+import { useCustomTemplates } from '../store/customTemplateStore';
 import { generateFromText } from '../ai/client';
 import { finishGeneration, spawnTemplate } from '../ai/generate';
 import { TEMPLATES } from '../engines/templates';
@@ -47,8 +48,14 @@ const LeftPanel: React.FC = () => {
   const setConfigOpen = useUi((s) => s.setConfigOpen);
   const addImageWindow = useBoard((s) => s.addImageWindow);
   const configured = useModelConfig(isConfigured);
-  // 「其他」显示全部模板，否则按学科过滤
-  const filteredTpls = subject === '其他' ? TEMPLATES : TEMPLATES.filter((t) => t.subject === subject);
+  const customTemplates = useCustomTemplates((s) => s.customTemplates);
+  const removeTemplate = useCustomTemplates((s) => s.removeTemplate);
+  // 我的模板（收藏）排在内置模板之前；「其他」显示全部，否则按学科过滤
+  const allTpls = [
+    ...customTemplates.map((t) => ({ id: t.id, name: t.name, subject: t.subject, knowledge: t.knowledge, mine: true })),
+    ...TEMPLATES.map((t) => ({ ...t, mine: false })),
+  ];
+  const filteredTpls = subject === '其他' ? allTpls : allTpls.filter((t) => t.subject === subject);
 
   const onGenerate = async () => {
     const input = text.trim();
@@ -122,23 +129,41 @@ const LeftPanel: React.FC = () => {
       </div>
 
       <div className={`${styles.section} ${styles.sectionGrow}`}>
-        <div className={styles.sectionTitle} title="内置演示模板，无需 API Key">
-          默认演示引擎 · {subject === '其他' ? '全部' : subject}
+        <div className={styles.sectionTitle} title="内置演示模板无需 API Key；「我的」为收藏的 AI 生成演示，存本地">
+          演示模板 · {subject === '其他' ? '全部' : subject}
+          {customTemplates.length > 0 && (
+            <span className={styles.tplMineCount}>我的 {customTemplates.length}</span>
+          )}
         </div>
         {filteredTpls.length === 0 && (
-          <div className={styles.hint}>该学科暂无默认模板，可输入文字生成</div>
+          <div className={styles.hint}>该学科暂无模板，可输入文字生成后点窗口上的「☆ 存为模板」收藏</div>
         )}
         {filteredTpls.map((t) => (
           <div
             key={t.id}
             className={styles.tplItem}
             onClick={() => {
-              spawnTemplate(t.knowledge, `默认模板：${t.name}`);
+              spawnTemplate(t.knowledge, `${t.mine ? '我的模板' : '默认模板'}：${t.name}`);
               setMsg({ kind: 'ok', text: `已生成「${t.name}」演示窗口` });
             }}
           >
             <span className={styles.tplName}>{t.name}</span>
+            {t.mine && <span className={styles.tplMine}>我的</span>}
             <span className={styles.tplSubject}>{t.subject}</span>
+            {t.mine && (
+              <button
+                type="button"
+                className={styles.tplDel}
+                title="从我的模板中删除"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeTemplate(t.id);
+                  setMsg({ kind: 'dim', text: `已删除我的模板「${t.name}」` });
+                }}
+              >
+                ✕
+              </button>
+            )}
           </div>
         ))}
       </div>

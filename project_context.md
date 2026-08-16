@@ -47,6 +47,7 @@ src/
   store/
     modelConfigStore.ts   # 模型配置（persist key: ai-board-model-config）
     boardStore.ts         # 窗口+笔画状态（persist key: ai-board-state）；含 arrangeTile/arrangeCascade 智能排列
+    customTemplateStore.ts # 我的模板库（persist key: ai-board-custom-templates）；收藏演示按学科归档，指纹去重
     uiStore.ts            # 面板开关等临时 UI 状态（leftOpen/rightOpen 不持久化）
 ```
 
@@ -58,7 +59,7 @@ src/
 - 所有交互用 **pointer events** + `touch-action:none`（兼容触屏），禁止只用 mouse events
 - 框选框必须高对比度红色（`#ff2233`），禁止浅色
 - 新窗口必须经 `boardStore.ts` 的 `placeInViewport` 落位，严禁出现在视口外
-- 持久化：仅 zustand persist 两个 key；`boardStore` 用 `partialize` 排除撤销栈；localStorage 写满时自动丢弃图片 dataURL 降级保存布局
+- 持久化：仅 zustand persist 三个 key（`ai-board-model-config` / `ai-board-state` / `ai-board-custom-templates`）；`boardStore` 用 `partialize` 排除撤销栈；localStorage 写满时自动丢弃图片 dataURL 降级保存布局
 - UI 文案全中文；滚动条用自定义细样式（global.css）
 - React StrictMode 已开启：**setState updater 内禁止写副作用**（已在 ImageWindow/AnnotationLayer 踩过两次坑）
 - 不做 git commit（用户未授权）
@@ -89,6 +90,7 @@ src/
 | **M4**：新渲染器 ×3（高斯钟形/三次函数/阻尼振动），模板 22 → 25，渲染类型 17 → 20 | `src/engines/renderers/{Gaussian,Cubic,DampedOscillation}Renderer.tsx`, `registry.ts`, `templates.ts`, `validate.ts`, `prompts.ts` |
 | **M4**：内置厂商新增通义千问（阿里百炼，curl 实测 CORS 可直连） | `src/config/providers.ts` |
 | **M4**：深空科幻 UI（极光背景、霓虹辉光、入场/悬停动效、reduced-motion 适配） | `src/styles/global.css`, `src/app.module.css`, `src/board/board.module.css` |
+| **M5**：我的模板库（演示窗口「☆ 存为模板」收藏、指纹去重、按学科归档复用、可删除） | `src/store/customTemplateStore.ts`, `src/windows/DemoWindow.tsx`, `src/components/LeftPanel.tsx` |
 
 内置厂商 BaseURL：DeepSeek `https://api.deepseek.com/v1`；Kimi `https://api.moonshot.cn/v1`；GLM `https://open.bigmodel.cn/api/paas/v4`；通义千问（阿里百炼）`https://dashscope.aliyuncs.com/compatible-mode/v1`；OpenCode Go `https://opencode.ai/zen/go/v1`；OpenCode Zen `https://opencode.ai/zen/v1`。vision 标注：DeepSeek 全 ❌；Kimi vision-preview 系列与 kimi-latest ✅；GLM glm-4v 系列 ✅；通义千问 qwen-vl 系列 ✅（qwen-plus/turbo/max/long ❌）。
 
@@ -121,4 +123,4 @@ src/
 
 ---
 
-最后更新：2026-08-16（M2+M3+M4 完成）
+最后更新：2026-08-16（M2+M3+M4+M5 完成）

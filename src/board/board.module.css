@@ -114,6 +114,29 @@
   border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
+/* 「存为模板」收藏按钮（复用 badge 胶囊外形） */
+.saveTplBtn {
+  cursor: pointer;
+  font-family: inherit;
+  color: #c4b5fd;
+  background: rgba(129, 140, 248, 0.12);
+  border: 1px solid rgba(129, 140, 248, 0.45);
+  transition: box-shadow 0.2s, border-color 0.15s, color 0.15s;
+}
+
+.saveTplBtn:hover:not(:disabled) {
+  border-color: rgba(167, 139, 250, 0.9);
+  box-shadow: 0 0 8px rgba(129, 140, 248, 0.4);
+  color: #ddd6fe;
+}
+
+.saveTplBtnSaved {
+  color: #a78bfa;
+  border-color: rgba(129, 140, 248, 0.25);
+  background: rgba(129, 140, 248, 0.06);
+  cursor: default;
+}
+
 .winBtns {
   flex: 0 0 auto;
   display: flex;

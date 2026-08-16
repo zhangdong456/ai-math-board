@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-M1+M2+M3+M4 均已完成，build 通过（tsc 零错误）。M4（演示同比缩放 + 动画自动播放 + 3 个新渲染器 + 通义千问厂商 + 科幻 UI）已用 bsk 驱动真实浏览器做自动化冒烟验证通过；M1~M3 仍待真实浏览器人工验收，真实 LLM 联调未做（无 API Key）。
+M1+M2+M3+M4+M5 均已完成，build 通过（tsc 零错误）。M4（演示同比缩放 + 动画自动播放 + 3 个新渲染器 + 通义千问厂商 + 科幻 UI）与 M5（我的模板库：AI 生成演示一键收藏、本地持久化、按学科复用）均已用 bsk 驱动真实浏览器做自动化冒烟验证通过；M1~M3 仍待真实浏览器人工验收，真实 LLM 联调未做（无 API Key）。
 
 ## 已完成事项
 
@@ -46,6 +46,12 @@ M1+M2+M3+M4 均已完成，build 通过（tsc 零错误）。M4（演示同比�
     - 内置厂商新增通义千问（阿里百炼）：`https://dashscope.aliyuncs.com/compatible-mode/v1`，模型 qwen-plus/turbo/max/long（❌）+ qwen-vl-plus/max（✅）；curl 实测 CORS 预检 ACAO:* 可直连、假 Key 返回标准 401（OpenAI 兼容）
     - 科幻 UI：顶栏 52px + 霓虹能量线 + logo 流光、白板极光背景漂移（顺带修复原 background/background-image 互相覆盖导致辉光丢失的 bug）、窗口霓虹描边 + popIn 入场、弹窗 fadeIn+popIn、按钮/模板项/工具钮悬停浮起辉光、区块标题霓虹条、prefers-reduced-motion 全站降级
     - bsk 真实浏览器自动化冒烟：模板列表出现新模板；高斯窗口 ✅ 已验证 + 自动播放按钮；shim rAF 后 σ 滑块值随时间变化（0.7→2.6）；窗口最大化后 SVG 546×325→698×497 同比放大；配置弹窗出现通义千问、BaseURL 自动填充、vl 模型 ✅ 标注正确（bsk 截图 readback 失败，未留截图，验证均走 DOM/evaluate）
+12. 完成 M5 我的模板库（用户新需求：AI 生成的演示可收藏到对应学科、本地存储、下次直接用）：
+    - 新增 `src/store/customTemplateStore.ts`（zustand persist，key `ai-board-custom-templates`）：saveTemplate（类型+variant+参数 JSON 指纹去重）/ removeTemplate；名称取 knowledge.title ?? registry defaultTitle，学科校验落入 数学/物理/化学/其他
+    - DemoWindow 验证徽章旁新增「☆ 存为模板」按钮（board.module.css `.saveTplBtn`），已收藏变「★ 已收藏」禁用态
+    - LeftPanel 模板列表改为 我的模板（置顶，紫色「我的」徽标 + ✕ 删除）+ 内置模板合并，学科过滤对两者生效，标题改为「演示模板 · 学科」并显示「我的 N」计数
+    - bsk 冒烟：收藏 → localStorage 写入 ✓；按钮变 ★ 禁用 ✓；列表「我的」徽标+计数 ✓；点击我的模板重新生成窗口 ✓；刷新后仍在 ✓；删除后列表清空 ✓
+    - 注意：用户反馈「窗口不显示」实为早期打开的标签页卡在 HMR 中间状态，硬刷新即恢复；非代码 bug
 
 ## 关键决策（用户已确认，勿轻易推翻）
 
