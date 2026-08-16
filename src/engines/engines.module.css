@@ -1,0 +1,104 @@
+/* 渲染器通用样式 */
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.sliderLabel {
+  flex: 0 0 auto;
+  min-width: 96px;
+  color: #9fb4d8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sliderRow input[type='range'] {
+  flex: 1;
+  min-width: 60px;
+  height: 4px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #223148;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sliderRow input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #0d1420;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+}
+
+.sliderValue {
+  flex: 0 0 64px;
+  text-align: right;
+  color: #e2ecfb;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 触屏（粗指针）设备：滑块热区加大，轨道视觉保持细 */
+@media (pointer: coarse) {
+  .sliderRow {
+    padding: 8px 0;
+  }
+
+  .sliderRow input[type='range'] {
+    height: 24px;
+    /* 4px 细轨道用背景绘制，整个 24px 高度都可点按 */
+    background: linear-gradient(to right, #223148, #223148) no-repeat center;
+    background-size: 100% 4px;
+  }
+
+  .sliderRow input[type='range']::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.renderer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.plotWrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 6px;
+}
+
+.controls {
+  flex: 0 0 auto;
+  max-height: 40%;
+  overflow-y: auto;
+  border-top: 1px solid #1e2a3d;
+  padding: 6px 10px;
+}
+
+.formula {
+  color: #7dd3fc;
+  font-size: 13px;
+  padding: 2px 0 6px;
+  font-family: 'Cambria Math', 'Times New Roman', serif;
+}
+
+.readout {
+  color: #a7f3d0;
+  font-size: 12px;
+  line-height: 1.7;
+}
