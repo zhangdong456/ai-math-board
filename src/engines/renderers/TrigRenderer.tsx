@@ -1,7 +1,9 @@
-// 三角函数 y = A·sin(ωx + φ) + b 渲染器：波形 + 振幅/周期/相位标注 + 参数滑块
+// 三角函数 y = A·sin(ωx + φ) + b 渲染器：波形 + 振幅/周期/相位标注 + 参数滑块 + 动画自动播放
 import React from 'react';
 import { PlotArea, makeTransform, samplePath } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -27,6 +29,18 @@ const TrigRenderer: React.FC<RendererProps> = ({ knowledge }) => {
     ['phi', { label: 'φ（初相）', min: -Math.PI, max: Math.PI, value: 0 }],
     ['b', { label: 'b（纵向平移）', min: -2, max: 2, value: 0 }],
   ];
+
+  // 动画演示：初相 φ 循环扫描（跨度约 2π，首尾衔接形成行波效果）
+  const phiParam = paramOf(knowledge, 'phi', defs[2][1]);
+  const auto = useAutoPlay(phiParam.min, phiParam.max, (v) => set('phi', v), {
+    mode: 'loop',
+    periodMs: 6000,
+  });
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
 
   return (
     <div className={styles.renderer}>
@@ -58,13 +72,14 @@ const TrigRenderer: React.FC<RendererProps> = ({ knowledge }) => {
           y = {A.toFixed(2)}·sin({omega.toFixed(2)}x {phi >= 0 ? '+' : '−'} {Math.abs(phi).toFixed(2)}){' '}
           {b >= 0 ? '+' : '−'} {Math.abs(b).toFixed(2)}
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动扫描初相 φ" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

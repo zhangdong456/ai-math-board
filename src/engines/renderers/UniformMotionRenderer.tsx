@@ -2,6 +2,8 @@
 import React from 'react';
 import { PlotArea, makeTransform, samplePath } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -17,6 +19,15 @@ const UniformMotionRenderer: React.FC<RendererProps> = ({ knowledge }) => {
   const a = num(values.a, 1);
   const t = num(values.t, 4);
   const tr = makeTransform(W, H, XR, YR);
+
+  // 动画演示：时间 t 自动推进（到 10 s 后跳回 0 循环）
+  const tParam = paramOf(knowledge, 't', { label: 't（观察时刻）', min: 0, max: 10, value: 4 });
+  const auto = useAutoPlay(tParam.min, tParam.max, (v) => set('t', v), { mode: 'loop', periodMs: 6000 });
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
 
   const v = (tt: number) => v0 + a * tt;
   const vt = v(t);
@@ -78,13 +89,14 @@ const UniformMotionRenderer: React.FC<RendererProps> = ({ knowledge }) => {
         <div className={styles.formula}>
           v = v₀ + at = {v0.toFixed(2)} {a >= 0 ? '+' : '−'} {Math.abs(a).toFixed(2)}·t
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="时间 t 自动推进" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(val) => set(key, val)}
+            onChange={(val) => manual(key, val)}
           />
         ))}
         <div className={styles.readout}>

@@ -83,6 +83,27 @@ export const PROVIDERS: ProviderPreset[] = [
     keyUrl: 'https://open.bigmodel.cn/usercenter/apikeys',
   },
   {
+    id: 'qwen',
+    name: '通义千问（阿里百炼）',
+    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    models: [
+      { id: 'qwen-plus', label: 'qwen-plus', vision: false },
+      { id: 'qwen-turbo', label: 'qwen-turbo', vision: false },
+      { id: 'qwen-max', label: 'qwen-max', vision: false },
+      { id: 'qwen-long', label: 'qwen-long', vision: false },
+      { id: 'qwen-vl-plus', label: 'qwen-vl-plus', vision: true },
+      { id: 'qwen-vl-max', label: 'qwen-vl-max', vision: true },
+    ],
+    keyHelp: [
+      '打开阿里云百炼平台 bailian.console.aliyun.com',
+      '注册 / 登录阿里云账号并开通百炼服务',
+      '进入「API-KEY 管理」页面，点击「创建新的 API-KEY」',
+      '复制生成的 Key（sk- 开头）粘贴到此处',
+      '点击「测试连接」验证',
+    ],
+    keyUrl: 'https://bailian.console.aliyun.com/?apiKey=1#/api-key',
+  },
+  {
     id: 'opencode-go',
     name: 'OpenCode Go',
     baseURL: 'https://opencode.ai/zen/go/v1',

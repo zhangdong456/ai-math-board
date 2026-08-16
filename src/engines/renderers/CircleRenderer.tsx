@@ -1,7 +1,9 @@
-// 圆 (x−h)² + (y−k)² = r² 渲染器：圆 + 圆心 + 半径标注 + 参数滑块
+// 圆 (x−h)² + (y−k)² = r² 渲染器：圆 + 圆心 + 半径标注 + 参数滑块 + 动画自动播放
 import React from 'react';
 import { PlotArea, makeTransform } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -28,6 +30,15 @@ const CircleRenderer: React.FC<RendererProps> = ({ knowledge }) => {
     ['r', { label: 'r（半径）', min: 0.5, max: 6, value: 3 }],
   ];
 
+  // 动画演示：自动扫描半径 r
+  const rParam = paramOf(knowledge, 'r', defs[2][1]);
+  const auto = useAutoPlay(rParam.min, rParam.max, (v) => set('r', v));
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
+
   return (
     <div className={styles.renderer}>
       <div className={styles.plotWrap}>
@@ -47,13 +58,14 @@ const CircleRenderer: React.FC<RendererProps> = ({ knowledge }) => {
         <div className={styles.formula}>
           (x − {h.toFixed(2)})² + (y − {k.toFixed(2)})² = {(r * r).toFixed(2)}
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动扫描半径 r" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

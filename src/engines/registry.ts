@@ -18,6 +18,9 @@ import ProjectileRenderer from './renderers/ProjectileRenderer';
 import BohrAtomRenderer from './renderers/BohrAtomRenderer';
 import ChemicalBalanceRenderer from './renderers/ChemicalBalanceRenderer';
 import Molecule3DRenderer from './renderers/Molecule3DRenderer';
+import GaussianRenderer from './renderers/GaussianRenderer';
+import CubicRenderer from './renderers/CubicRenderer';
+import DampedOscillationRenderer from './renderers/DampedOscillationRenderer';
 
 export interface RendererEntry {
   component: ComponentType<RendererProps>;
@@ -111,6 +114,21 @@ export const RENDERERS: Record<string, RendererEntry> = {
     component: Molecule3DRenderer,
     requiredParams: ['rotX', 'rotY'],
     defaultTitle: '分子 3D 结构',
+  },
+  gaussian: {
+    component: GaussianRenderer,
+    requiredParams: ['a', 'mu', 'sigma'],
+    defaultTitle: '高斯钟形曲线（正态分布）',
+  },
+  cubic: {
+    component: CubicRenderer,
+    requiredParams: ['a', 'b', 'c', 'd'],
+    defaultTitle: '三次函数 y = ax³ + bx² + cx + d',
+  },
+  damped_oscillation: {
+    component: DampedOscillationRenderer,
+    requiredParams: ['A', 'beta', 'omega', 't'],
+    defaultTitle: '阻尼振动 x = A·e^(−βt)·cos(ωt)',
   },
 };
 

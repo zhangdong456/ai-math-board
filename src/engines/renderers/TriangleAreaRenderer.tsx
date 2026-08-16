@@ -1,6 +1,9 @@
-// 三角形面积 S = ½·底·高 渲染器：拖动顶点偏移演示"等底等高面积不变"
+// 三角形面积 S = ½·底·高 渲染器：拖动顶点偏移演示"等底等高面积不变" + 动画自动播放
 import React from 'react';
+import { FitSvg } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -35,10 +38,19 @@ const TriangleAreaRenderer: React.FC<RendererProps> = ({ knowledge }) => {
     ['offset', { label: 'offset（顶点偏移）', min: -6, max: 6, value: 0 }],
   ];
 
+  // 动画演示：自动移动顶点（等底等高，面积不变）
+  const offsetParam = paramOf(knowledge, 'offset', defs[2][1]);
+  const auto = useAutoPlay(offsetParam.min, offsetParam.max, (v) => set('offset', v));
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
+
   return (
     <div className={styles.renderer}>
       <div className={styles.plotWrap}>
-        <svg width={W} height={H} style={{ display: 'block', touchAction: 'none' }}>
+        <FitSvg width={W} height={H}>
           <rect x={0} y={0} width={W} height={H} fill="#0d1420" rx={8} />
           {/* 三角形半透明填充 */}
           <polygon
@@ -83,19 +95,20 @@ const TriangleAreaRenderer: React.FC<RendererProps> = ({ knowledge }) => {
           {/* 底边端点 */}
           <circle cx={sx(ax)} cy={sy(0)} r={3.5} fill="#38bdf8" />
           <circle cx={sx(bx)} cy={sy(0)} r={3.5} fill="#38bdf8" />
-        </svg>
+        </FitSvg>
       </div>
       <div className={styles.controls}>
         <div className={styles.formula}>
           S = ½ × 底 × 高 = ½ × {base.toFixed(2)} × {height.toFixed(2)} = {area.toFixed(2)}
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动移动顶点（面积不变）" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

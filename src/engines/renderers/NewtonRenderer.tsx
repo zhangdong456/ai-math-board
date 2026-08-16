@@ -1,6 +1,9 @@
-// 牛顿第二定律 F = ma 渲染器：滑块调 m / a，力箭头与数值实时变化
+// 牛顿第二定律 F = ma 渲染器：滑块调 m / a，力箭头与数值实时变化 + 动画自动播放
 import React from 'react';
+import { FitSvg } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -33,10 +36,19 @@ const NewtonRenderer: React.FC<RendererProps> = ({ knowledge }) => {
     ['a', { label: 'a（加速度）', min: -5, max: 5, value: 1, unit: ' m/s²' }],
   ];
 
+  // 动画演示：自动扫描加速度 a
+  const aParam = paramOf(knowledge, 'a', defs[1][1]);
+  const auto = useAutoPlay(aParam.min, aParam.max, (v) => set('a', v));
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
+
   return (
     <div className={styles.renderer}>
       <div className={styles.plotWrap}>
-        <svg width={W} height={H} style={{ display: 'block', touchAction: 'none' }}>
+        <FitSvg width={W} height={H}>
           <rect x={0} y={0} width={W} height={H} fill="#0d1420" rx={8} />
           {/* 地面 */}
           <line x1={30} y1={groundY} x2={W - 30} y2={groundY} stroke="#4a5f82" strokeWidth={2} />
@@ -100,19 +112,20 @@ const NewtonRenderer: React.FC<RendererProps> = ({ knowledge }) => {
           <text x={30} y={14} fill="#7c8db0" fontSize={11}>
             合力大小 |F|（满刻度 ≈ {maxF.toFixed(0)} N）
           </text>
-        </svg>
+        </FitSvg>
       </div>
       <div className={styles.controls}>
         <div className={styles.formula}>
           F = m·a = {m.toFixed(1)} × {a.toFixed(2)} = {F.toFixed(2)} N
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动扫描加速度 a" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

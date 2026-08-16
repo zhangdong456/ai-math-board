@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-M1+M2+M3 均已完成，build 通过（tsc 零错误），dev 冒烟通过。尚未在真实浏览器中人工验收（M1~M3），未做真实 LLM 联调（无 API Key）。
+M1+M2+M3+M4 均已完成，build 通过（tsc 零错误）。M4（演示同比缩放 + 动画自动播放 + 3 个新渲染器 + 通义千问厂商 + 科幻 UI）已用 bsk 驱动真实浏览器做自动化冒烟验证通过；M1~M3 仍待真实浏览器人工验收，真实 LLM 联调未做（无 API Key）。
 
 ## 已完成事项
 
@@ -39,6 +39,13 @@ M1+M2+M3 均已完成，build 通过（tsc 零错误），dev 冒烟通过。尚
     - M3 窗口智能排列：boardStore 新增 arrangeTile（⌈√n⌉ 网格平铺）/ arrangeCascade（居中+32px 级联），header 加「▦ 平铺」「▤ 级联」按钮
     - M3 性能：WindowFrame 拖动/缩放 rAF 节流（endDrag 提交终态）、DemoWindow/ImageWindow 包 React.memo、AnnotationLayer 草稿改 useRef + rAF 合并重绘（pointermove 不再触发 React 渲染）
     - M3 触屏：全局 touch-action: manipulation + 去点按高亮；pointer:coarse 下加大 resize 手柄/标题栏按钮/滑块 thumb/模板项热区，输入框 14px 防 iOS 缩放
+11. 完成 M4 演示力与视觉升级（用户 7 项新需求，build 通过 tsc 零错误）：
+    - 坐标系同比放大：根因是渲染器 SVG 固定 520×360 像素。PlotArea 改为内部使用新增 FitSvg（viewBox + preserveAspectRatio + 宽高 100%），8 个裸 SVG 渲染器同步换 FitSvg，全部 20 种渲染器随窗口缩放（含文字刻度）
+    - 动画自动播放：新增 useAutoPlay（rAF 驱动，pingpong 往返/loop 循环/整数 step）+ AutoPlayButton，16 种渲染器接入（化学配平不加）；手动拖滑块自动停止播放
+    - 新渲染器 ×3：高斯钟形曲线 gaussian（a/mu/sigma，拐点 μ±σ 标注）、三次函数 cubic（极值点判别式标注）、阻尼振动 damped_oscillation（包络线 ±A·e^(−βt)+时间循环）；registry/TYPE_RULES/TYPE_SUBJECT/prompts/templates 同步，模板 22 → 25
+    - 内置厂商新增通义千问（阿里百炼）：`https://dashscope.aliyuncs.com/compatible-mode/v1`，模型 qwen-plus/turbo/max/long（❌）+ qwen-vl-plus/max（✅）；curl 实测 CORS 预检 ACAO:* 可直连、假 Key 返回标准 401（OpenAI 兼容）
+    - 科幻 UI：顶栏 52px + 霓虹能量线 + logo 流光、白板极光背景漂移（顺带修复原 background/background-image 互相覆盖导致辉光丢失的 bug）、窗口霓虹描边 + popIn 入场、弹窗 fadeIn+popIn、按钮/模板项/工具钮悬停浮起辉光、区块标题霓虹条、prefers-reduced-motion 全站降级
+    - bsk 真实浏览器自动化冒烟：模板列表出现新模板；高斯窗口 ✅ 已验证 + 自动播放按钮；shim rAF 后 σ 滑块值随时间变化（0.7→2.6）；窗口最大化后 SVG 546×325→698×497 同比放大；配置弹窗出现通义千问、BaseURL 自动填充、vl 模型 ✅ 标注正确（bsk 截图 readback 失败，未留截图，验证均走 DOM/evaluate）
 
 ## 关键决策（用户已确认，勿轻易推翻）
 
@@ -47,15 +54,17 @@ M1+M2+M3 均已完成，build 通过（tsc 零错误），dev 冒烟通过。尚
 - 架构：纯前端直连 LLM API，Key 存 localStorage，无后端
 - AI 生成方式：AI 只输出结构化 JSON，本地引擎渲染（准确性 > 可解释性 > 动画效果）
 - 交付策略：核心闭环优先，默认模板逐步扩充
-- 内置厂商：DeepSeek、Kimi、GLM、OpenCode Go、OpenCode Zen + 自定义 OpenAI 兼容接口
+- 内置厂商：DeepSeek、Kimi、GLM、通义千问（阿里百炼）、OpenCode Go、OpenCode Zen + 自定义 OpenAI 兼容接口
+- 阿里百炼 BaseURL：`https://dashscope.aliyuncs.com/compatible-mode/v1`（curl 实测 CORS 可直连）
 - OpenCode Go BaseURL：`https://opencode.ai/zen/go/v1`；OpenCode Zen：`https://opencode.ai/zen/v1`（均已联网核实）
 
 ## 未完成待办
 
-- [ ] 用户在真实浏览器人工验收 M1~M3（`npm run dev`）：两大核心场景 + M2 新模板/渲染器 + M3 侧栏折叠/智能排列/触屏，反馈 UI/交互问题
+- [ ] 用户在真实浏览器人工验收 M1~M4（`npm run dev`）：两大核心场景 + M2 新模板/渲染器 + M3 侧栏折叠/智能排列/触屏 + M4 自动播放/同比缩放/科幻 UI，反馈 UI/交互问题（M4 已过 bsk 自动化冒烟，仍建议人工过目视觉效果）
+- [ ] 通义千问真实 Key 联调：接口连通性已 curl 实测（CORS ✅、401 格式 ✅），但无真实 Key，「测试连接」与生成链路未端到端跑通，等用户提供 Key 复测
 - [ ] Kimi 连接失败复测：等用户提供测试连接时 UI 显示的具体错误文案（或直接给一个 Key 让我 curl 复测）
 - [ ] OpenCode Go / Zen 接入方案决策：自建 OpenAI 兼容中转后走「自定义」，或让我写一个本地小代理脚本（会引入一个需常开的 Node 进程，打破纯前端形态）
-- [ ] 真实 LLM 联调（需用户提供任一厂商 Key 自测）：文字生成 + 图片框选识别，重点验证 JSON 输出稳定性（含 12 个新类型参数与 variant）
+- [ ] 真实 LLM 联调（需用户提供任一厂商 Key 自测）：文字生成 + 图片框选识别，重点验证 JSON 输出稳定性（含 M2 12 个新类型与 M4 的 gaussian/cubic/damped_oscillation 参数约定）
 - [ ] 已知小瑕疵（不阻塞，见 project_context.md「已知坑点」）
 
 ## 如何继续

@@ -2,6 +2,8 @@
 import React from 'react';
 import { PlotArea, makeTransform, samplePath } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -18,6 +20,15 @@ const DerivativeRenderer: React.FC<RendererProps> = ({ knowledge }) => {
   const x0 = num(values.x0, 1);
   const h = num(values.h, 1);
   const t = makeTransform(W, H, XR, YR);
+
+  // 动画演示：自动移动切点 x0
+  const x0Param = paramOf(knowledge, 'x0', { label: 'x0（切点）', min: -8, max: 8, value: 1 });
+  const auto = useAutoPlay(x0Param.min, x0Param.max, (v) => set('x0', v));
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
 
   const f = (x: number) => a * x * x + b * x + c;
   const f0 = f(x0);
@@ -83,13 +94,14 @@ const DerivativeRenderer: React.FC<RendererProps> = ({ knowledge }) => {
           f(x) = {a.toFixed(2)}x² {b >= 0 ? '+' : '−'} {Math.abs(b).toFixed(2)}x {c >= 0 ? '+' : '−'}{' '}
           {Math.abs(c).toFixed(2)}　f′(x) = {(2 * a).toFixed(2)}x {b >= 0 ? '+' : '−'} {Math.abs(b).toFixed(2)}
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动移动切点 x₀" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, key === 'a' && v === 0 ? 0.01 : v)}
+            onChange={(v) => manual(key, key === 'a' && v === 0 ? 0.01 : v)}
           />
         ))}
         <div className={styles.readout}>

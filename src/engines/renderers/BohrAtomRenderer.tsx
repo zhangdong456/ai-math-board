@@ -1,6 +1,9 @@
-// 玻尔原子模型渲染器：滑块调原子序数 Z，电子层排布实时变化
+// 玻尔原子模型渲染器：滑块调原子序数 Z，电子层排布实时变化 + 动画自动播放
 import React from 'react';
+import { FitSvg } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -42,10 +45,19 @@ const BohrAtomRenderer: React.FC<RendererProps> = ({ knowledge }) => {
   const cy = 185;
   const shellR = (i: number) => 52 + i * 34;
 
+  // 动画演示：自动切换原子序数 Z（整数步进）
+  const zParam = paramOf(knowledge, 'Z', { label: 'Z（原子序数）', min: 1, max: 20, step: 1, value: 6 });
+  const auto = useAutoPlay(zParam.min, zParam.max, (v) => set('Z', v), { step: 1, periodMs: 10000 });
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
+
   return (
     <div className={styles.renderer}>
       <div className={styles.plotWrap}>
-        <svg width={W} height={H} style={{ display: 'block', touchAction: 'none' }}>
+        <FitSvg width={W} height={H}>
           <rect x={0} y={0} width={W} height={H} fill="#0d1420" rx={8} />
           {/* 电子层同心圆 */}
           {shells.map((_, i) => (
@@ -104,17 +116,18 @@ const BohrAtomRenderer: React.FC<RendererProps> = ({ knowledge }) => {
           <text x={388} y={146 + shells.length * 30} fill="#7c8db0" fontSize={11}>
             合计 {Z} 个核外电子
           </text>
-        </svg>
+        </FitSvg>
       </div>
       <div className={styles.controls}>
         <div className={styles.formula}>
           {name} {symbol} · 核电荷数 +{Z} · 电子排布 {shells.join('、')}（{SHELL_NAMES.slice(0, shells.length).join('/')}）
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动切换原子序数 Z" />
         <ParamSlider
           name="Z"
-          param={paramOf(knowledge, 'Z', { label: 'Z（原子序数）', min: 1, max: 20, step: 1, value: 6 })}
+          param={zParam}
           value={num(values.Z, 6)}
-          onChange={(v) => set('Z', v)}
+          onChange={(v) => manual('Z', v)}
         />
         <div className={styles.readout}>
           {name}（{symbol}），原子序数 {Z}，核电荷数 +{Z}，核外电子总数 {Z}；各层排布：

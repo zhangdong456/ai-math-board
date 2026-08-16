@@ -1,6 +1,9 @@
-// 平行四边形面积 S = 底 × 高 渲染器：割补法——把一端的直角三角形平移到另一端拼成长方形
+// 平行四边形面积 S = 底 × 高 渲染器：割补法——把一端的直角三角形平移到另一端拼成长方形 + 动画自动播放
 import React from 'react';
+import { FitSvg } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -31,10 +34,19 @@ const ParallelogramAreaRenderer: React.FC<RendererProps> = ({ knowledge }) => {
     ['slant', { label: 'slant（倾斜偏移）', min: 0, max: 6, value: 2 }],
   ];
 
+  // 动画演示：自动改变倾斜（底和高不变，面积不变）
+  const slantParam = paramOf(knowledge, 'slant', defs[2][1]);
+  const auto = useAutoPlay(slantParam.min, slantParam.max, (v) => set('slant', v));
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
+
   return (
     <div className={styles.renderer}>
       <div className={styles.plotWrap}>
-        <svg width={W} height={H} style={{ display: 'block', touchAction: 'none' }}>
+        <FitSvg width={W} height={H}>
           <rect x={0} y={0} width={W} height={H} fill="#0d1420" rx={8} />
           {/* 割补目标：base × height 的长方形轮廓（虚线） */}
           <rect
@@ -90,19 +102,20 @@ const ParallelogramAreaRenderer: React.FC<RendererProps> = ({ knowledge }) => {
           <text x={(sx(0) + sx(base)) / 2} y={sy(0) + 20} fill="#7dd3fc" fontSize={12} textAnchor="middle">
             底 = {base.toFixed(2)}
           </text>
-        </svg>
+        </FitSvg>
       </div>
       <div className={styles.controls}>
         <div className={styles.formula}>
           S = 底 × 高 = {base.toFixed(2)} × {height.toFixed(2)} = {area.toFixed(2)}
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动改变倾斜（面积不变）" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

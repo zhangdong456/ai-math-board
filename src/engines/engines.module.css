@@ -78,7 +78,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: auto;
+  overflow: hidden;
   padding: 6px;
 }
 
@@ -101,4 +101,49 @@
   color: #a7f3d0;
   font-size: 12px;
   line-height: 1.7;
+}
+
+/* 动画自动播放按钮 */
+.autoPlayBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 6px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  color: #cfe3ff;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(129, 140, 248, 0.14));
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
+}
+
+.autoPlayBtn:hover {
+  border-color: rgba(56, 189, 248, 0.9);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
+}
+
+.autoPlayBtn:active {
+  transform: translateY(0);
+}
+
+.autoPlayBtnOn {
+  color: #0b1220;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  border-color: transparent;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.55);
+}
+
+.autoPlayIcon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* 触屏设备：按钮热区加大 */
+@media (pointer: coarse) {
+  .autoPlayBtn {
+    padding: 11px 16px;
+  }
 }

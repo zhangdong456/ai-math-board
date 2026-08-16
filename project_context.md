@@ -27,10 +27,12 @@ src/
   engines/
     registry.ts           # type → 渲染器 分发（新增演示类型在此注册）
     templates.ts          # 默认演示模板（无 API Key 可用）
-    PlotArea.tsx          # 通用 SVG 坐标系
+    PlotArea.tsx          # 通用 SVG 坐标系 + FitSvg（viewBox 自适应缩放容器，所有渲染器统一走它）
     ParamSlider.tsx       # 参数滑块
     useParams.ts          # 演示参数状态 hook
-    renderers/            # 各类型渲染器 ×17：Quadratic/Linear/Trig/Circle/Newton（M1）+ RectArea/TriangleArea/ParallelogramArea/CircleArea/Exponential/Derivative/UniformMotion/OhmLaw/Projectile/BohrAtom/ChemicalBalance/Molecule3D（M2，Molecule3D 为纯 SVG 手写旋转投影+画家算法，无 3D 库）
+    useAutoPlay.ts        # 动画自动播放 hook（rAF 驱动参数 pingpong/loop 扫描）
+    AutoPlayButton.tsx    # 自动播放按钮（▶/⏸）
+    renderers/            # 各类型渲染器 ×20：Quadratic/Linear/Trig/Circle/Newton（M1）+ RectArea/TriangleArea/ParallelogramArea/CircleArea/Exponential/Derivative/UniformMotion/OhmLaw/Projectile/BohrAtom/ChemicalBalance/Molecule3D（M2，Molecule3D 为纯 SVG 手写旋转投影+画家算法，无 3D 库）+ Gaussian/Cubic/DampedOscillation（M4）
   board/
     Board.tsx             # 白板容器：视口管理、窗口渲染、标注层挂载
     WindowFrame.tsx       # 窗口外壳：拖动/八向调大小/最大化/最小化/关闭/置顶
@@ -51,6 +53,8 @@ src/
 ## 3. 关键约定
 
 - **AI 不直接生成代码/动画**：只输出 `types/knowledge.ts` 定义的结构化 JSON，本地引擎渲染。新增演示类型 = 加类型 + 写 renderer + `registry.ts` 注册 + `templates.ts` 加模板 + prompt 补充说明
+- **渲染器 SVG 一律走 FitSvg/PlotArea**（viewBox + 宽高 100%），禁止固定像素 `width/height`，否则窗口放大后坐标系不变（M4 修复过的坑）
+- **自动播放接入模式**：`useAutoPlay(param.min, param.max, v => set(key, v), {mode/periodMs/step})` + `<AutoPlayButton>`；时间/旋转类用 loop，系数类用 pingpong，整数参数传 step；滑块 onChange 必须经 `manual`（先 `auto.stop()` 再 set）
 - 所有交互用 **pointer events** + `touch-action:none`（兼容触屏），禁止只用 mouse events
 - 框选框必须高对比度红色（`#ff2233`），禁止浅色
 - 新窗口必须经 `boardStore.ts` 的 `placeInViewport` 落位，严禁出现在视口外
@@ -80,16 +84,22 @@ src/
 | **M3**：窗口智能排列（平铺 arrangeTile / 级联 arrangeCascade） | `src/store/boardStore.ts`, `src/App.tsx` |
 | **M3**：性能优化（窗口拖动缩放 rAF 节流、DemoWindow/ImageWindow React.memo、画笔草稿 useRef + rAF 合并重绘） | `src/board/WindowFrame.tsx`, `src/windows/*.tsx`, `src/board/AnnotationLayer.tsx` |
 | **M3**：触屏打磨（touch-action、加大热区/按钮/滑块、输入框 14px 防 iOS 缩放） | `src/styles/global.css` |
+| **M4**：坐标系随窗口同比缩放（FitSvg/viewBox 改造全部 20 种渲染器） | `src/engines/PlotArea.tsx`, `src/engines/renderers/*.tsx` |
+| **M4**：动画自动播放（useAutoPlay + AutoPlayButton，16 种渲染器接入，拖滑块即停） | `src/engines/useAutoPlay.ts`, `src/engines/AutoPlayButton.tsx`, `src/engines/renderers/*.tsx` |
+| **M4**：新渲染器 ×3（高斯钟形/三次函数/阻尼振动），模板 22 → 25，渲染类型 17 → 20 | `src/engines/renderers/{Gaussian,Cubic,DampedOscillation}Renderer.tsx`, `registry.ts`, `templates.ts`, `validate.ts`, `prompts.ts` |
+| **M4**：内置厂商新增通义千问（阿里百炼，curl 实测 CORS 可直连） | `src/config/providers.ts` |
+| **M4**：深空科幻 UI（极光背景、霓虹辉光、入场/悬停动效、reduced-motion 适配） | `src/styles/global.css`, `src/app.module.css`, `src/board/board.module.css` |
 
-内置厂商 BaseURL：DeepSeek `https://api.deepseek.com/v1`；Kimi `https://api.moonshot.cn/v1`；GLM `https://open.bigmodel.cn/api/paas/v4`；OpenCode Go `https://opencode.ai/zen/go/v1`；OpenCode Zen `https://opencode.ai/zen/v1`。vision 标注：DeepSeek 全 ❌；Kimi vision-preview 系列与 kimi-latest ✅；GLM glm-4v 系列 ✅。
+内置厂商 BaseURL：DeepSeek `https://api.deepseek.com/v1`；Kimi `https://api.moonshot.cn/v1`；GLM `https://open.bigmodel.cn/api/paas/v4`；通义千问（阿里百炼）`https://dashscope.aliyuncs.com/compatible-mode/v1`；OpenCode Go `https://opencode.ai/zen/go/v1`；OpenCode Zen `https://opencode.ai/zen/v1`。vision 标注：DeepSeek 全 ❌；Kimi vision-preview 系列与 kimi-latest ✅；GLM glm-4v 系列 ✅；通义千问 qwen-vl 系列 ✅（qwen-plus/turbo/max/long ❌）。
 
 ## 5. 待办与下一步
 
-1. 真实浏览器人工验收 M1~M3（两大核心场景 + M2 新模板/渲染器 + M3 折叠/排列/触屏）
-2. Kimi 连接失败复测（等用户提供 UI 错误文案或 Key）
-3. OpenCode Go / Zen 接入：用户自搭中转走「自定义」，或加本地 Node 代理脚本（破坏纯前端形态，待用户决策）
-4. 真实 LLM 联调（文字 + 图片识别），验证 JSON 稳定性（重点：12 个新类型的参数约定与 variant 输出是否稳定）
-5. 远期：Electron 套壳桌面端
+1. 真实浏览器人工验收 M1~M4（两大核心场景 + M2 新模板/渲染器 + M3 折叠/排列/触屏 + M4 自动播放/同比缩放/科幻 UI；M4 已过 bsk 自动化冒烟）
+2. 通义千问真实 Key 端到端联调（接口已 curl 实测可直连，缺 Key）
+3. Kimi 连接失败复测（等用户提供 UI 错误文案或 Key）
+4. OpenCode Go / Zen 接入：用户自搭中转走「自定义」，或加本地 Node 代理脚本（破坏纯前端形态，待用户决策）
+5. 真实 LLM 联调（文字 + 图片识别），验证 JSON 稳定性（重点：M2/M4 新类型的参数约定与 variant 输出是否稳定）
+6. 远期：Electron 套壳桌面端
 
 ## 6. 已知坑点与注意事项
 
@@ -101,7 +111,9 @@ src/
 - 窗口最小化还原只还原尺寸不还原位置（有意为之）
 - 部分模型（kimi-k2 系列等）不允许自定义 temperature，会报 400「invalid temperature: only 1 is allowed」：`chatCompletion` 已做自动降级（去掉 temperature 重试），新增请求参数时注意同类兼容性
 - 推理模型（kimi-k3 等）会把 max_tokens 全用在思考链（reasoning_content）上，正文为空且 finish_reason=length：`chatCompletion` 检测到该特征自动 4 倍预算重试（上限 16384），默认 maxTokens=4096、测试连接=1024；结构化 JSON 生成场景建议用户选非推理模型（推理模型慢且贵）
-- 纯前端直连 LLM 受各厂商 CORS 限制（已 curl 实测）：DeepSeek / Kimi / GLM 预检正常可直连；**OpenCode Go / Zen 服务端无 CORS（预检 404、无 ACAO 头），网页无法直连**——API 本身正常（带错误 Key 会明确返回 401），纯粹是浏览器跨域限制；CLI/桌面端工具（如 deepseekharness）走 Node 直连无此限制。providers.ts 已加 `corsWarning` 提示，需中转代理走「自定义」
+- 纯前端直连 LLM 受各厂商 CORS 限制（已 curl 实测）：DeepSeek / Kimi / GLM / 通义千问（阿里百炼，预检 ACAO:*）预检正常可直连；**OpenCode Go / Zen 服务端无 CORS（预检 404、无 ACAO 头），网页无法直连**——API 本身正常（带错误 Key 会明确返回 401），纯粹是浏览器跨域限制；CLI/桌面端工具（如 deepseekharness）走 Node 直连无此限制。providers.ts 已加 `corsWarning` 提示，需中转代理走「自定义」
+- 自动播放用 rAF 驱动：**标签页隐藏时 rAF 暂停，动画停走属预期**（回前台自动恢复）；用 bsk 等工具验证时若 Agent Window 被遮挡（visibilityState=hidden），需 shim `requestAnimationFrame` 才能看到参数变化
+- 白板背景曾踩坑：`background` 简写与 `background-image` 分开写会互相覆盖导致径向辉光丢失，M4 已合并为单条多图层 `background-image`
 - 「获取模型列表」= `client.ts` 的 `fetchModels`（GET /models），结果存 `modelConfigStore.fetchedModels`（persist）；fetched 模型的 vision 标注走 `providers.ts` 的 `guessVision` 启发式
 - API Key 明文存 localStorage，仅适用个人本机场景，UI 已注明
 - localStorage ~5MB：多张大图靠压缩 dataURL + 写满降级策略兜底
@@ -109,4 +121,4 @@ src/
 
 ---
 
-最后更新：2026-08-16（M2+M3 完成）
+最后更新：2026-08-16（M2+M3+M4 完成）

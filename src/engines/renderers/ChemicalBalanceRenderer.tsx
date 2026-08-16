@@ -1,5 +1,6 @@
 // 化学方程式配平渲染器：aH₂ + bO₂ → cH₂O，分子图示 + 原子守恒对比
 import React from 'react';
+import { FitSvg } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
@@ -75,7 +76,7 @@ const ChemicalBalanceRenderer: React.FC<RendererProps> = ({ knowledge }) => {
   return (
     <div className={styles.renderer}>
       <div className={styles.plotWrap}>
-        <svg width={W} height={H} style={{ display: 'block', touchAction: 'none' }}>
+        <FitSvg width={W} height={H}>
           <rect x={0} y={0} width={W} height={H} fill="#0d1420" rx={8} />
           {/* 反应物区 / 生成物区 */}
           <rect x={14} y={14} width={196} height={212} rx={8} fill="none" stroke="#223148" strokeWidth={1.5} strokeDasharray="5,4" />
@@ -138,7 +139,7 @@ const ChemicalBalanceRenderer: React.FC<RendererProps> = ({ knowledge }) => {
               ? '✅ 已配平（原子守恒）'
               : `❌ 未配平：H 左${hLeft}/右${hRight}，O 左${oLeft}/右${oRight}`}
           </text>
-        </svg>
+        </FitSvg>
       </div>
       <div className={styles.controls}>
         <div className={styles.formula}>

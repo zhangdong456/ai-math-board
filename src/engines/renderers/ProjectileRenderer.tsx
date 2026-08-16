@@ -2,6 +2,8 @@
 import React from 'react';
 import { PlotArea, makeTransform, samplePath } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -19,6 +21,15 @@ const ProjectileRenderer: React.FC<RendererProps> = ({ knowledge }) => {
   const fall = 0.5 * g * 25; // t = 5 s 的下落深度
   const YR: [number, number] = [-fall * 1.12, fall * 0.18];
   const tr = makeTransform(W, H, XR, YR);
+
+  // 动画演示：时间 t 自动推进（到 5 s 后跳回 0 循环）
+  const tParam = paramOf(knowledge, 't', { label: 't（时刻）', min: 0, max: 5, value: 1 });
+  const auto = useAutoPlay(tParam.min, tParam.max, (v) => set('t', v), { mode: 'loop', periodMs: 5000 });
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
 
   const traj = (x: number) => (-g * x * x) / (2 * v0 * v0);
   const x = v0 * t;
@@ -90,13 +101,14 @@ const ProjectileRenderer: React.FC<RendererProps> = ({ knowledge }) => {
         <div className={styles.formula}>
           x = v₀·t，y = −½·g·t²（轨迹 y = −g·x² / (2v₀²)）
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="时间 t 自动推进" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

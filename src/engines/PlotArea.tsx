@@ -39,6 +39,27 @@ export function ticks(min: number, max: number): number[] {
   return out;
 }
 
+interface FitSvgProps {
+  width: number;
+  height: number;
+  children?: React.ReactNode;
+}
+
+/**
+ * 自适应缩放的 SVG 容器：内部仍按 width×height 逻辑坐标绘制，
+ * 通过 viewBox + preserveAspectRatio 随外层容器同比缩放（含文字/线宽），
+ * 窗口放大时坐标系不会再显得小。
+ */
+export const FitSvg: React.FC<FitSvgProps> = ({ width, height, children }) => (
+  <svg
+    viewBox={`0 0 ${width} ${height}`}
+    preserveAspectRatio="xMidYMid meet"
+    style={{ display: 'block', width: '100%', height: '100%', touchAction: 'none' }}
+  >
+    {children}
+  </svg>
+);
+
 interface PlotAreaProps {
   width: number;
   height: number;
@@ -47,13 +68,13 @@ interface PlotAreaProps {
   children?: React.ReactNode;
 }
 
-/** 带网格与刻度坐标轴的 SVG 坐标系（y 轴向上为正） */
+/** 带网格与刻度坐标轴的 SVG 坐标系（y 轴向上为正，随窗口同比缩放） */
 export const PlotArea: React.FC<PlotAreaProps> = ({ width, height, xRange, yRange, children }) => {
   const t = makeTransform(width, height, xRange, yRange);
   const xs = ticks(xRange[0], xRange[1]);
   const ys = ticks(yRange[0], yRange[1]);
   return (
-    <svg width={width} height={height} style={{ display: 'block', touchAction: 'none' }}>
+    <FitSvg width={width} height={height}>
       <rect x={0} y={0} width={width} height={height} fill="#0d1420" rx={8} />
       {xs.map((x) => (
         <g key={`x${x}`}>
@@ -81,7 +102,7 @@ export const PlotArea: React.FC<PlotAreaProps> = ({ width, height, xRange, yRang
       <text x={width - 34} y={t.toY(0) - 6} fill="#9fb4d8" fontSize={11}>x</text>
       <text x={t.toX(0) + 6} y={20} fill="#9fb4d8" fontSize={11}>y</text>
       {children}
-    </svg>
+    </FitSvg>
   );
 };
 

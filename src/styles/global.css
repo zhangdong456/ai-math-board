@@ -9,7 +9,51 @@
   --accent: #38bdf8;
   --accent-2: #818cf8;
   --danger: #f43f5e;
+  /* 科幻氛围：辉光与动效 token */
+  --glow-cyan: rgba(56, 189, 248, 0.35);
+  --glow-violet: rgba(129, 140, 248, 0.28);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   font-size: 14px;
+}
+
+/* 通用动效关键帧 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 白板深空极光源缓慢漂移 */
+@keyframes auroraDrift {
+  0% { transform: translate3d(-4%, -3%, 0) scale(1); }
+  50% { transform: translate3d(4%, 3%, 0) scale(1.12); }
+  100% { transform: translate3d(-4%, -3%, 0) scale(1); }
+}
+
+/* logo 渐变流光 */
+@keyframes shimmer {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+
+/* 尊重系统减弱动效设置 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 * {
@@ -26,7 +70,10 @@ body,
 }
 
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(56, 189, 248, 0.08), transparent 60%),
+    radial-gradient(1000px 700px at 95% 110%, rgba(129, 140, 248, 0.07), transparent 60%),
+    var(--bg);
   color: var(--text);
   font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -56,6 +103,7 @@ textarea,
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #3d547a;
+  box-shadow: 0 0 6px var(--glow-cyan);
 }
 /* 细滚动条（Firefox） */
 * {
@@ -71,13 +119,20 @@ textarea,
   padding: 6px 12px;
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s, transform 0.12s var(--ease-out), box-shadow 0.2s;
   white-space: nowrap;
   user-select: none;
 }
 
 .btn:hover:not(:disabled) {
   border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.22);
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .btn:disabled {
@@ -90,10 +145,12 @@ textarea,
   border-color: transparent;
   color: #fff;
   font-weight: 600;
+  box-shadow: 0 2px 14px rgba(56, 189, 248, 0.3);
 }
 
 .btn.primary:hover:not(:disabled) {
   filter: brightness(1.12);
+  box-shadow: 0 4px 20px rgba(56, 189, 248, 0.45);
 }
 
 .btn.ghost {
@@ -118,13 +175,14 @@ select {
   font-family: inherit;
   outline: none;
   width: 100%;
+  transition: border-color 0.15s, box-shadow 0.2s;
 }
 
 input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15), 0 0 12px rgba(56, 189, 248, 0.18);
 }
 
 textarea {

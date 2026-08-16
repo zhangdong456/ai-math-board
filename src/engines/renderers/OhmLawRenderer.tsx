@@ -2,6 +2,8 @@
 import React from 'react';
 import { PlotArea, makeTransform, samplePath } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -19,6 +21,15 @@ const OhmLawRenderer: React.FC<RendererProps> = ({ knowledge }) => {
   const YR: [number, number] = [0, Math.max((12 / R) * 1.25, 0.2)];
   const t = makeTransform(W, H, XR, YR);
   const fn = (u: number) => u / R;
+
+  // 动画演示：自动扫描电压 U
+  const uParam = paramOf(knowledge, 'U', { label: 'U（电压）', min: 0, max: 12, value: 6 });
+  const auto = useAutoPlay(uParam.min, uParam.max, (v) => set('U', v));
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
 
   const defs: Array<[string, { label: string; min: number; max: number; value: number; unit?: string; effect?: string }]> = [
     ['U', { label: 'U（电压）', min: 0, max: 12, value: 6, unit: ' V', effect: '沿特性曲线移动工作点' }],
@@ -68,13 +79,14 @@ const OhmLawRenderer: React.FC<RendererProps> = ({ knowledge }) => {
         <div className={styles.formula}>
           I = U / R = {U.toFixed(2)} / {R.toFixed(1)} = {I.toFixed(3)} A
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动扫描电压 U" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

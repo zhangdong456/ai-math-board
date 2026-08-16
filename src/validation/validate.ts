@@ -28,10 +28,13 @@ const TYPE_SUBJECT: Record<string, string> = {
   circle_area: '数学',
   exponential: '数学',
   derivative: '数学',
+  gaussian: '数学',
+  cubic: '数学',
   newton_second_law: '物理',
   uniform_motion: '物理',
   ohm_law: '物理',
   projectile: '物理',
+  damped_oscillation: '物理',
   bohr_atom: '化学',
   chemical_balance: '化学',
   molecule_3d: '化学',
@@ -223,6 +226,38 @@ const TYPE_RULES: Record<string, (k: KnowledgeJSON) => VerifyResult | null> = {
   // 分子 3D：variant 必须是支持的分子种类，否则回退 CH4
   molecule_3d(k) {
     if (!k.variant || !['CH4', 'H2O', 'CO2', 'NH3'].includes(k.variant)) k.variant = 'CH4';
+    return null;
+  },
+
+  // 高斯钟形曲线：峰高 a 与宽度 sigma 必须为正
+  gaussian(k) {
+    for (const key of ['a', 'sigma']) {
+      const p = k.parameters[key];
+      if (p.max <= 0) return { ok: false, status: 'pending', reason: '高斯曲线的峰高 a 与宽度 σ 必须为正数' };
+      if (p.min <= 0) p.min = 0.1;
+      if (p.value <= 0) p.value = Math.min(1, p.max);
+    }
+    return null;
+  },
+
+  // 三次函数：复用 quadratic 的 a ≠ 0 规则
+  cubic(k) {
+    return TYPE_RULES.quadratic(k);
+  },
+
+  // 阻尼振动：t ≥ 0；A、omega 必须为正；beta 不小于 0
+  damped_oscillation(k) {
+    const t = nonNegativeTime(k);
+    if (t) return t;
+    for (const key of ['A', 'omega']) {
+      const p = k.parameters[key];
+      if (p.max <= 0) return { ok: false, status: 'pending', reason: '初始振幅 A 与角频率 ω 必须为正数' };
+      if (p.min <= 0) p.min = 0.1;
+      if (p.value <= 0) p.value = Math.min(1, p.max);
+    }
+    const beta = k.parameters.beta;
+    if (beta.min < 0) beta.min = 0;
+    if (beta.value < 0) beta.value = 0;
     return null;
   },
 };

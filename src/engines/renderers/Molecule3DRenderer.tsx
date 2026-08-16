@@ -1,6 +1,9 @@
-// 分子 3D 球棍模型渲染器：纯 SVG 手写 3D 投影（旋转 + 正交投影 + 画家算法），滑块旋转视角
+// 分子 3D 球棍模型渲染器：纯 SVG 手写 3D 投影（旋转 + 正交投影 + 画家算法），滑块旋转视角 + 动画自动播放
 import React from 'react';
+import { FitSvg } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import type { KnowledgeJSON } from '../../types/knowledge';
 import styles from '../engines.module.css';
@@ -151,10 +154,22 @@ const Molecule3DRenderer: React.FC<RendererProps> = ({ knowledge }) => {
     ['rotY', { label: 'rotY（绕 Y 轴）', min: -180, max: 180, step: 1, value: 30, unit: '°' }],
   ];
 
+  // 动画演示：绕 Y 轴自动旋转（-180° → 180° 循环，两端朝向相同故跳变无缝）
+  const rotYParam = paramOf(knowledge, 'rotY', defs[1][1]);
+  const auto = useAutoPlay(rotYParam.min, rotYParam.max, (v) => set('rotY', v), {
+    mode: 'loop',
+    periodMs: 8000,
+  });
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
+
   return (
     <div className={styles.renderer}>
       <div className={styles.plotWrap}>
-        <svg width={W} height={H} style={{ display: 'block', touchAction: 'none' }}>
+        <FitSvg width={W} height={H}>
           <rect x={0} y={0} width={W} height={H} fill="#0d1420" rx={8} />
           <text x={20} y={30} fill="#e2ecfb" fontSize={14} fontWeight={700}>
             {mol.name}（{variant}）
@@ -208,19 +223,20 @@ const Molecule3DRenderer: React.FC<RendererProps> = ({ knowledge }) => {
               </g>
             );
           })}
-        </svg>
+        </FitSvg>
       </div>
       <div className={styles.controls}>
         <div className={styles.formula}>
           {variant} · {mol.name} · 旋转角（{rotX.toFixed(0)}°, {rotY.toFixed(0)}°）
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动旋转" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

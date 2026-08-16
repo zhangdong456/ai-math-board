@@ -1,6 +1,9 @@
-// 圆面积渲染器：内接正 n 边形逼近圆，演示 Sₙ → πr² 的极限过程
+// 圆面积渲染器：内接正 n 边形逼近圆，演示 Sₙ → πr² 的极限过程 + 动画自动播放
 import React from 'react';
+import { FitSvg } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -34,10 +37,19 @@ const CircleAreaRenderer: React.FC<RendererProps> = ({ knowledge }) => {
     ['n', { label: 'n（多边形边数）', min: 3, max: 64, value: 12, step: 1 }],
   ];
 
+  // 动画演示：自动变化割圆边数 n（整数步进）
+  const nParam = paramOf(knowledge, 'n', defs[1][1]);
+  const auto = useAutoPlay(nParam.min, nParam.max, (v) => set('n', v), { step: 1, periodMs: 6000 });
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
+
   return (
     <div className={styles.renderer}>
       <div className={styles.plotWrap}>
-        <svg width={W} height={H} style={{ display: 'block', touchAction: 'none' }}>
+        <FitSvg width={W} height={H}>
           <rect x={0} y={0} width={W} height={H} fill="#0d1420" rx={8} />
           {/* 圆 */}
           <circle cx={cx} cy={cy} r={R} fill="none" stroke="#38bdf8" strokeWidth={2} />
@@ -58,19 +70,20 @@ const CircleAreaRenderer: React.FC<RendererProps> = ({ knowledge }) => {
           <text x={cx} y={24} fill="#7c8db0" fontSize={11} textAnchor="middle">
             内接正 {n} 边形
           </text>
-        </svg>
+        </FitSvg>
       </div>
       <div className={styles.controls}>
         <div className={styles.formula}>
           Sₙ = n·r²·sin(π/n)·cos(π/n) = {sn.toFixed(4)}　→　S = πr² = {sc.toFixed(4)}
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动变化割圆边数 n" />
         {defs.map(([key, fb]) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, fb)}
             value={num(values[key], fb.value)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>

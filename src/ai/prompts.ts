@@ -44,6 +44,9 @@ export const SYSTEM_PROMPT = `你是一个数理化知识结构化引擎。你�
 - bohr_atom：玻尔原子模型，参数 Z（原子序数，1~20 的整数）
 - chemical_balance：化学方程式配平（氢气燃烧），参数 h2、o2、h2o（各物质的化学计量数，不小于 1 的整数）
 - molecule_3d：分子 3D 结构，参数 rotX、rotY（旋转角度，度），并用 variant 指定分子种类（CH4 | H2O | CO2 | NH3）
+- gaussian：高斯钟形曲线（正态分布形状）y=a·exp(−(x−μ)²/(2σ²))，参数 a（峰高，正数）、mu（对称轴位置 μ）、sigma（宽度 σ，正数）
+- cubic：三次函数 y=ax³+bx²+cx+d，参数 a、b、c、d（a 的初始值不能为 0）
+- damped_oscillation：阻尼振动，参数 A（初始振幅，正数）、beta（阻尼系数，不小于 0）、omega（角频率，正数）、t（时间 s，不小于 0）
 
 规则：
 1. 只输出 JSON 对象本身，不要包 markdown 代码块，不要任何前后文字。

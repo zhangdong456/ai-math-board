@@ -1,7 +1,9 @@
-// 一次函数 y = kx + b 渲染器：直线 + 截距标注 + 参数滑块
+// 一次函数 y = kx + b 渲染器：直线 + 截距标注 + 参数滑块 + 动画自动播放
 import React from 'react';
 import { PlotArea, makeTransform, samplePath } from '../PlotArea';
 import ParamSlider from '../ParamSlider';
+import AutoPlayButton from '../AutoPlayButton';
+import { useAutoPlay } from '../useAutoPlay';
 import { num, paramOf, useParams, type RendererProps } from '../useParams';
 import styles from '../engines.module.css';
 
@@ -15,6 +17,15 @@ const LinearRenderer: React.FC<RendererProps> = ({ knowledge }) => {
   const k = num(values.k, 1);
   const b = num(values.b, 0);
   const t = makeTransform(W, H, XR, YR);
+
+  // 动画演示：自动扫描斜率 k
+  const kParam = paramOf(knowledge, 'k', { label: 'k', min: -10, max: 10, value: 0 });
+  const auto = useAutoPlay(kParam.min, kParam.max, (v) => set('k', v));
+  // 手动拖滑块时停止自动播放，避免互相抢值
+  const manual = (key: string, v: number) => {
+    auto.stop();
+    set(key, v);
+  };
 
   const fn = (x: number) => k * x + b;
   const yIntVisible = b >= YR[0] && b <= YR[1];
@@ -48,13 +59,14 @@ const LinearRenderer: React.FC<RendererProps> = ({ knowledge }) => {
         <div className={styles.formula}>
           y = {k.toFixed(2)}x {b >= 0 ? '+' : '−'} {Math.abs(b).toFixed(2)}
         </div>
+        <AutoPlayButton playing={auto.playing} onToggle={auto.toggle} hint="自动扫描斜率 k" />
         {(['k', 'b'] as const).map((key) => (
           <ParamSlider
             key={key}
             name={key}
             param={paramOf(knowledge, key, { label: key, min: -10, max: 10, value: 0 })}
             value={num(values[key], 0)}
-            onChange={(v) => set(key, v)}
+            onChange={(v) => manual(key, v)}
           />
         ))}
         <div className={styles.readout}>
