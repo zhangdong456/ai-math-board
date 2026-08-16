@@ -26,8 +26,9 @@
   left: 0;
   right: 0;
   bottom: -1px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.55) 30%, rgba(129, 140, 248, 0.55) 70%, transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.85) 30%, rgba(129, 140, 248, 0.85) 70%, transparent);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
   pointer-events: none;
 }
 
